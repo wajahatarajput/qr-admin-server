@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose'); //
 const bodyParser = require('body-parser'); // request json handle
 const http = require('http');
+const cors = require('cors');
 const socketIo = require('socket.io'); // real time data streaming 
 const { User, Student, Teacher, Course, Session } = require('./schemas');
 
@@ -20,6 +21,7 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 app.use(bodyParser.json());
+app.use(cors());
 
 // REST APIs
 
