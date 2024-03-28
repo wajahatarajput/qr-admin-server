@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema({
         required: true
     }
     // add more fields
+    // first_name last_name cast
 });
 
 // Define schema for student
@@ -29,11 +30,15 @@ const studentSchema = new mongoose.Schema({
     courses: [{ // works as foreign key for course schema as can have multiple courses
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course'
-    }] // Array of courses a student is enrolled in
+    }], // Array of courses a student is enrolled in
 
     // joining Date
     // leaving Date -> null
-    // status -> active, left, pass_out
+    status: {
+        type: String,
+        enum: ['active', 'left', 'pass_out'],
+        required: true
+    }
 });
 
 // Define schema for teacher

@@ -28,11 +28,29 @@ app.use(cors());
 // Create user
 app.post('/api/users', async (req, res) => {
     try {
+        console.log(req.body)
         const user = new User(req.body);
         await user.save();
         res.status(201).send(user);
     } catch (error) {
         res.status(400).send(error);
+    }
+});
+
+// Login user
+app.post('/api/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        const user = await User.findOne({ username, password });
+        if (!user) {
+            return res.status(200).json({ userExist: false });
+        }
+
+        res.json({ userExist: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
     }
 });
 
