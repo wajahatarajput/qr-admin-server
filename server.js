@@ -41,7 +41,6 @@ app.post('/api/users', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-
         const user = await User.findOne({ username, password });
         if (!user) {
             return res.status(200).json({ userExist: false });
@@ -60,6 +59,44 @@ app.post('/api/students', async (req, res) => {
         const student = new Student(req.body);
         await student.save();
         res.status(201).send(student);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
+// Update student by ID
+app.put('/api/students/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        const options = { new: true }; // To return the updated document
+
+        // Find and update the student
+        const student = await Student.findByIdAndUpdate(id, updates, options);
+
+        if (!student) {
+            return res.status(404).send({ message: 'Student not found' });
+        }
+
+        res.send(student);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
+// Delete student by ID
+app.delete('/api/students/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find and delete the student
+        const student = await Student.findByIdAndDelete(id);
+
+        if (!student) {
+            return res.status(404).send({ message: 'Student not found' });
+        }
+
+        res.send({ message: 'Student deleted successfully' });
     } catch (error) {
         res.status(400).send(error);
     }
