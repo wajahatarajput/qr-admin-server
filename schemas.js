@@ -15,10 +15,17 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['admin', 'student', 'teacher'],
         required: true
+    },
+    first_name: {
+        type: String,
+        required: true
+    },
+    last_name: {
+        type: String,
+        required: true
     }
-    // add more fields
-    // first_name last_name cast
 });
+
 
 // Define schema for student
 const studentSchema = new mongoose.Schema({
@@ -32,14 +39,24 @@ const studentSchema = new mongoose.Schema({
         ref: 'Course'
     }], // Array of courses a student is enrolled in
 
-    // joining Date
-    // leaving Date -> null
+    joiningDate: {
+        type: Date,
+        required: true,
+        default: Date.now
+    },
+
+    leavingDate: {
+        type: Date,
+        default: null
+    },
+
     status: {
         type: String,
         enum: ['active', 'left', 'pass_out'],
-        required: true
+        default: 'active'
     }
 });
+
 
 // Define schema for teacher
 const teacherSchema = new mongoose.Schema({

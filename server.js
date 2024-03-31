@@ -53,10 +53,43 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// Get students
+app.get('/api/students', async (req, res) => {
+    try {
+        const students = await Student.find().populate('user');
+        res.status(200).send(students);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
+// Get student by ID
+app.get('/api/students/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find the student
+        const student = await Student.findById(id).populate('user');
+
+        if (!student) {
+            return res.status(404).send({ message: 'Student not found' });
+        }
+        res.send(student);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
 // Create student
 app.post('/api/students', async (req, res) => {
     try {
-        const student = new Student(req.body);
+        const user = new User(req.body);
+        await user.save();
+        const studentObject = {
+            user: user._id,
+            courses: []
+        }
+        const student = new Student(studentObject);
         await student.save();
         res.status(201).send(student);
     } catch (error) {
@@ -69,16 +102,27 @@ app.put('/api/students/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
+        // Find the student
+        const student = await Student.findById(id);
+        const user = student.user;
+
+        // Update the user information
+        await User.findByIdAndUpdate(user._id, {
+            username: updates.username,
+            password: updates.password,
+            first_name: updates.first_name,
+            last_name: updates.last_name
+        });
+
+        // Update the student information
         const options = { new: true }; // To return the updated document
+        const updatedStudent = await Student.findByIdAndUpdate(id, updates, options);
 
-        // Find and update the student
-        const student = await Student.findByIdAndUpdate(id, updates, options);
-
-        if (!student) {
+        if (!updatedStudent) {
             return res.status(404).send({ message: 'Student not found' });
         }
 
-        res.send(student);
+        res.send(updatedStudent);
     } catch (error) {
         res.status(400).send(error);
     }
@@ -89,14 +133,23 @@ app.delete('/api/students/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Find and delete the student
-        const student = await Student.findByIdAndDelete(id);
+        // Find the student and delete it
+        const student = await Student.findByIdAndDelete(id)
 
         if (!student) {
             return res.status(404).send({ message: 'Student not found' });
         }
 
-        res.send({ message: 'Student deleted successfully' });
+        console.log(student)
+
+        // Find the user associated with the student
+        const user = await User.findOneAndDelete(student.user);
+
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+
+        res.send({ message: 'Student and associated user deleted successfully' });
     } catch (error) {
         res.status(400).send(error);
     }
@@ -156,7 +209,7 @@ io.on('connection', socket => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
 });
