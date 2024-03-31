@@ -127,11 +127,17 @@ const sessionSchema = new mongoose.Schema({
             type: Boolean,
             default: false
         }
-    }]
-    // Add more session fields as needed
-    // session time
-    // room number
+    }],
+    sessionTime: {
+        type: Date, // Assuming session time is a Date object
+        required: true
+    },
+    roomNumber: {
+        type: String,
+        required: true
+    }
 });
+
 
 // Create models based on the schemas
 const User = mongoose.model('User', userSchema);

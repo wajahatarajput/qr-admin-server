@@ -255,6 +255,32 @@ app.delete('/api/teachers/:id', async (req, res) => {
     }
 });
 
+// Get courses
+app.get('/api/courses', async (req, res) => {
+    try {
+        const courses = await Course.find();
+        res.status(200).send(courses);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
+// Get course by ID
+app.get('/api/courses/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find the course
+        const course = await Course.findById(id);
+
+        if (!course) {
+            return res.status(404).send({ message: 'Course not found' });
+        }
+        res.send(course);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
 
 // Create course
 app.post('/api/courses', async (req, res) => {
@@ -262,6 +288,44 @@ app.post('/api/courses', async (req, res) => {
         const course = new Course(req.body);
         await course.save();
         res.status(201).send(course);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
+// Update course by ID
+app.put('/api/courses/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+
+        // Update the course information
+        const options = { new: true }; // To return the updated document
+        const updatedCourse = await Course.findByIdAndUpdate(id, updates, options);
+
+        if (!updatedCourse) {
+            return res.status(404).send({ message: 'Course not found' });
+        }
+
+        res.send(updatedCourse);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
+// Delete course by ID
+app.delete('/api/courses/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find the course and delete it
+        const course = await Course.findByIdAndDelete(id);
+
+        if (!course) {
+            return res.status(404).send({ message: 'Course not found' });
+        }
+
+        res.send({ message: 'Course deleted successfully' });
     } catch (error) {
         res.status(400).send(error);
     }
