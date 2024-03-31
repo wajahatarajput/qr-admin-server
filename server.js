@@ -26,7 +26,7 @@ app.use(cors());
 
 // REST APIs
 
-// Create user
+// Create user //admin
 app.post('/api/users', async (req, res) => {
     try {
         const user = new User(req.body);
@@ -409,6 +409,37 @@ app.post('/api/sessions', async (req, res) => {
         res.status(201).send(session);
     } catch (error) {
         res.status(200).send(error);
+    }
+});
+
+
+// ----------------------------------------------------
+
+// POST route to assign a course to a teacher
+app.post('/assigncourse/:teacherId/:courseId', async (req, res) => {
+    const { teacherId, courseId } = req.params;
+
+    try {
+        // Check if teacher exists
+        const teacher = await Teacher.findById(teacherId);
+        if (!teacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+
+        // Check if course exists
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        // Add course to teacher's courses array
+        teacher.courses.push(courseId);
+        await teacher.save();
+
+        res.json({ message: 'Course assigned to teacher successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
     }
 });
 
