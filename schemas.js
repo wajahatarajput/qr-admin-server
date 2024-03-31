@@ -97,7 +97,8 @@ const courseSchema = new mongoose.Schema({
     },
     course_code: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Student' }], // Array of students enrolled in the course
     sessions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Session' }] // Array of sessions associated with the course

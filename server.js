@@ -116,7 +116,7 @@ app.post('/api/login', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign({ userId: user._id }, 'bnb_aatika');
 
-        res.status(200).json({ token });
+        res.status(200).json({ token, id: user?._id });
     } catch (error) {
         console.error(error);
         res.status(200).json({ message: "Server Error" });
@@ -440,6 +440,44 @@ app.post('/assigncourse/:teacherId/:courseId', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+
+// POST request to register a student in a course
+app.post('/registercourse/:userId/:course_code', async (req, res) => {
+    const { userId, course_code } = req.params;
+    try {
+        // Check if student and course exist
+        const user = await User.findById(userId);
+        const student = await Student.find({ user });
+        const course = await Course.find({ course_code });
+
+        if (!student) {
+            return res.status(404).json({ message: "Student not found" });
+        }
+
+        if (!course) {
+            return res.status(404).json({ message: "Course not found" });
+        }
+
+        // Check if the student is already enrolled in the course
+        if (course[0]?.students?.includes(student[0]?._id)) {
+            return res.status(400).json({ message: "Student is already enrolled in this course" });
+        }
+
+        // Update student's courses array with the new course
+        student[0].courses.push(course[0]?._id);
+        await student[0].save();
+
+        // Update course's students array with the new student
+        course[0].students.push(student[0]?._id);
+        await course[0].save();
+
+        res.status(200).json({ message: "Student registered in the course successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 });
 
