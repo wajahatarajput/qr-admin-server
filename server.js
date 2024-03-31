@@ -29,23 +29,88 @@ app.use(cors());
 // Create user
 app.post('/api/users', async (req, res) => {
     try {
-        console.log(req.body)
         const user = new User(req.body);
         await user.save();
         res.status(201).send(user);
     } catch (error) {
-        res.status(200).send(error);
+        console.error(error);
+        res.status(200).send({ message: "Internal Server Error" });
+    }
+});
+
+// Get users
+app.get('/api/users', async (req, res) => {
+    try {
+        const users = await User.find();
+
+        res.status(200).send(users);
+    } catch (error) {
+        console.error(error);
+        res.status(200).send({ message: "Internal Server Error" });
+    }
+});
+
+// Get user by ID
+app.get('/api/users/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(200).send({ message: 'User not found' });
+        }
+
+        res.status(200).send(user);
+    } catch (error) {
+        console.error(error);
+        res.status(200).send({ message: "Internal Server Error" });
+    }
+});
+
+// Update user by ID
+app.put('/api/users/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+
+        const user = await User.findByIdAndUpdate(id, updates, { new: true });
+
+        if (!user) {
+            return res.status(200).send({ message: 'User not found' });
+        }
+
+        res.status(200).send(user);
+    } catch (error) {
+        console.error(error);
+        res.status(200).send({ message: "Internal Server Error" });
+    }
+});
+
+// Delete user by ID
+app.delete('/api/users/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findByIdAndDelete(id);
+
+        if (!user) {
+            return res.status(200).send({ message: 'User not found' });
+        }
+
+        res.status(200).send({ message: 'User deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(200).send({ message: "Internal Server Error" });
     }
 });
 
 // Login user
 app.post('/api/login', async (req, res) => {
     try {
-        const { username, password } = req.body;
-        const user = await User.findOne({ username, password });
+        const { username, password, role } = req.body;
+        const user = await User.findOne({ username, password, role });
 
         if (!user) {
-            return res.status(401).json({ message: "Invalid username or password" });
+            return res.status(401).json({ message: "Invalid username or password or you must not have access to this app contact the admin" });
         }
 
         // Generate JWT token
@@ -54,7 +119,7 @@ app.post('/api/login', async (req, res) => {
         res.status(200).json({ token });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Server Error" });
+        res.status(200).json({ message: "Server Error" });
     }
 });
 
@@ -368,7 +433,7 @@ io.on('connection', socket => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 2000;
 server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
 });
