@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose'); //
 const bodyParser = require('body-parser'); // request json handle
 const http = require('http');
+const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const socketIo = require('socket.io'); // real time data streaming 
 const { User, Student, Teacher, Course, Session } = require('./schemas');
@@ -33,7 +34,7 @@ app.post('/api/users', async (req, res) => {
         await user.save();
         res.status(201).send(user);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -42,11 +43,15 @@ app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         const user = await User.findOne({ username, password });
+
         if (!user) {
-            return res.status(200).json({ userExist: false });
+            return res.status(401).json({ message: "Invalid username or password" });
         }
 
-        res.json({ userExist: true });
+        // Generate JWT token
+        const token = jwt.sign({ userId: user._id }, 'bnb_aatika');
+
+        res.status(200).json({ token });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server Error" });
@@ -59,7 +64,7 @@ app.get('/api/students', async (req, res) => {
         const students = await Student.find().populate('user');
         res.status(200).send(students);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -72,11 +77,11 @@ app.get('/api/students/:id', async (req, res) => {
         const student = await Student.findById(id).populate('user');
 
         if (!student) {
-            return res.status(404).send({ message: 'Student not found' });
+            return res.status(200).send({ message: 'Student not found' });
         }
         res.send(student);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -93,7 +98,7 @@ app.post('/api/students', async (req, res) => {
         await student.save();
         res.status(201).send(student);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -119,12 +124,12 @@ app.put('/api/students/:id', async (req, res) => {
         const updatedStudent = await Student.findByIdAndUpdate(id, updates, options);
 
         if (!updatedStudent) {
-            return res.status(404).send({ message: 'Student not found' });
+            return res.status(200).send({ message: 'Student not found' });
         }
 
         res.send(updatedStudent);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -137,7 +142,7 @@ app.delete('/api/students/:id', async (req, res) => {
         const student = await Student.findByIdAndDelete(id)
 
         if (!student) {
-            return res.status(404).send({ message: 'Student not found' });
+            return res.status(200).send({ message: 'Student not found' });
         }
 
         console.log(student)
@@ -146,12 +151,12 @@ app.delete('/api/students/:id', async (req, res) => {
         const user = await User.findOneAndDelete(student.user);
 
         if (!user) {
-            return res.status(404).send({ message: 'User not found' });
+            return res.status(200).send({ message: 'User not found' });
         }
 
         res.send({ message: 'Student and associated user deleted successfully' });
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -161,7 +166,7 @@ app.get('/api/teachers', async (req, res) => {
         const teachers = await Teacher.find().populate('user');
         res.status(200).send(teachers);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -174,11 +179,11 @@ app.get('/api/teachers/:id', async (req, res) => {
         const teacher = await Teacher.findById(id).populate('user');
 
         if (!teacher) {
-            return res.status(404).send({ message: 'Teacher not found' });
+            return res.status(200).send({ message: 'Teacher not found' });
         }
         res.send(teacher);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -195,7 +200,7 @@ app.post('/api/teachers', async (req, res) => {
         await teacher.save();
         res.status(201).send(teacher);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -221,12 +226,12 @@ app.put('/api/teachers/:id', async (req, res) => {
         const updatedTeacher = await Teacher.findByIdAndUpdate(id, updates, options);
 
         if (!updatedTeacher) {
-            return res.status(404).send({ message: 'Teacher not found' });
+            return res.status(200).send({ message: 'Teacher not found' });
         }
 
         res.send(updatedTeacher);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -239,19 +244,19 @@ app.delete('/api/teachers/:id', async (req, res) => {
         const teacher = await Teacher.findByIdAndDelete(id)
 
         if (!teacher) {
-            return res.status(404).send({ message: 'Teacher not found' });
+            return res.status(200).send({ message: 'Teacher not found' });
         }
 
         // Find the user associated with the teacher
         const user = await User.findOneAndDelete(teacher.user);
 
         if (!user) {
-            return res.status(404).send({ message: 'User not found' });
+            return res.status(200).send({ message: 'User not found' });
         }
 
         res.send({ message: 'Teacher and associated user deleted successfully' });
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -261,7 +266,7 @@ app.get('/api/courses', async (req, res) => {
         const courses = await Course.find();
         res.status(200).send(courses);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -274,11 +279,11 @@ app.get('/api/courses/:id', async (req, res) => {
         const course = await Course.findById(id);
 
         if (!course) {
-            return res.status(404).send({ message: 'Course not found' });
+            return res.status(200).send({ message: 'Course not found' });
         }
         res.send(course);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -289,7 +294,7 @@ app.post('/api/courses', async (req, res) => {
         await course.save();
         res.status(201).send(course);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -304,12 +309,12 @@ app.put('/api/courses/:id', async (req, res) => {
         const updatedCourse = await Course.findByIdAndUpdate(id, updates, options);
 
         if (!updatedCourse) {
-            return res.status(404).send({ message: 'Course not found' });
+            return res.status(200).send({ message: 'Course not found' });
         }
 
         res.send(updatedCourse);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -322,12 +327,12 @@ app.delete('/api/courses/:id', async (req, res) => {
         const course = await Course.findByIdAndDelete(id);
 
         if (!course) {
-            return res.status(404).send({ message: 'Course not found' });
+            return res.status(200).send({ message: 'Course not found' });
         }
 
         res.send({ message: 'Course deleted successfully' });
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
@@ -338,7 +343,7 @@ app.post('/api/sessions', async (req, res) => {
         await session.save();
         res.status(201).send(session);
     } catch (error) {
-        res.status(400).send(error);
+        res.status(200).send(error);
     }
 });
 
