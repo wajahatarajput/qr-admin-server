@@ -155,16 +155,106 @@ app.delete('/api/students/:id', async (req, res) => {
     }
 });
 
+// Get teachers
+app.get('/api/teachers', async (req, res) => {
+    try {
+        const teachers = await Teacher.find().populate('user');
+        res.status(200).send(teachers);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
+// Get teacher by ID
+app.get('/api/teachers/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find the teacher
+        const teacher = await Teacher.findById(id).populate('user');
+
+        if (!teacher) {
+            return res.status(404).send({ message: 'Teacher not found' });
+        }
+        res.send(teacher);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
 // Create teacher
 app.post('/api/teachers', async (req, res) => {
     try {
-        const teacher = new Teacher(req.body);
+        const user = new User(req.body);
+        await user.save();
+        const teacherObject = {
+            user: user._id,
+            courses: []
+        }
+        const teacher = new Teacher(teacherObject);
         await teacher.save();
         res.status(201).send(teacher);
     } catch (error) {
         res.status(400).send(error);
     }
 });
+
+// Update teacher by ID
+app.put('/api/teachers/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        // Find the teacher
+        const teacher = await Teacher.findById(id);
+        const user = teacher.user;
+
+        // Update the user information
+        await User.findByIdAndUpdate(user._id, {
+            username: updates.username,
+            password: updates.password,
+            first_name: updates.first_name,
+            last_name: updates.last_name
+        });
+
+        // Update the teacher information
+        const options = { new: true }; // To return the updated document
+        const updatedTeacher = await Teacher.findByIdAndUpdate(id, updates, options);
+
+        if (!updatedTeacher) {
+            return res.status(404).send({ message: 'Teacher not found' });
+        }
+
+        res.send(updatedTeacher);
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
+// Delete teacher by ID
+app.delete('/api/teachers/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find the teacher and delete it
+        const teacher = await Teacher.findByIdAndDelete(id)
+
+        if (!teacher) {
+            return res.status(404).send({ message: 'Teacher not found' });
+        }
+
+        // Find the user associated with the teacher
+        const user = await User.findOneAndDelete(teacher.user);
+
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+
+        res.send({ message: 'Teacher and associated user deleted successfully' });
+    } catch (error) {
+        res.status(400).send(error);
+    }
+});
+
 
 // Create course
 app.post('/api/courses', async (req, res) => {

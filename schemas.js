@@ -65,11 +65,24 @@ const teacherSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
-    courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }] // Array of courses a teacher is teaching
-    // (optional)
-    // joining Date
-    // leaving Date
-    // status
+    courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }], // Array of courses a teacher is teaching
+
+    joiningDate: {
+        type: Date,
+        required: true,
+        default: Date.now
+    },
+
+    leavingDate: {
+        type: Date,
+        default: null
+    },
+
+    status: {
+        type: String,
+        enum: ['active', 'left', 'pass_out'],
+        default: 'active'
+    }
 });
 
 // Define schema for course
